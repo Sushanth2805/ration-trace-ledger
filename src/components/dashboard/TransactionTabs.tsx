@@ -2,7 +2,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TransactionTable from '@/components/TransactionTable';
-import { CheckCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, Database } from 'lucide-react';
 import { Transaction } from '@/types/blockchain';
 
 interface TransactionTabsProps {
@@ -20,8 +20,8 @@ const TransactionTabs: React.FC<TransactionTabsProps> = ({
     <Tabs defaultValue="active" className="w-full">
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="active" className="flex items-center gap-2">
-          <AlertCircle className="h-4 w-4" />
-          Pending Verification ({activeTransactions.length})
+          <Database className="h-4 w-4" />
+          All Transactions ({activeTransactions.length})
         </TabsTrigger>
         <TabsTrigger value="removed" className="flex items-center gap-2">
           <CheckCircle className="h-4 w-4" />

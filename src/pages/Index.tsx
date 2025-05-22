@@ -40,7 +40,8 @@ const Index = () => {
     refreshData();
   }, []);
 
-  const activeTransactions = transactions.filter(t => !t.verified);
+  // Modified: Include all transactions in activeTransactions, not just unverified ones
+  const activeTransactions = transactions;
   const verifiedTransactions = transactions.filter(t => t.verified);
 
   return (
