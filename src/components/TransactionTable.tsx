@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Transaction } from '../types/blockchain';
 import { BlockchainService } from '../utils/blockchain';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Shield, CheckCircle, AlertCircle } from 'lucide-react';
+import { Trash2, Shield, CheckCircle, AlertCircle, Link } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 interface TransactionTableProps {
@@ -134,6 +134,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Chain</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Beneficiary</TableHead>
                 <TableHead>Item</TableHead>
@@ -146,8 +147,22 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactions.map((transaction) => (
+              {transactions.map((transaction, index) => (
                 <TableRow key={transaction.id}>
+                  <TableCell className="text-xs text-blue-600">
+                    {index > 0 ? (
+                      <div className="flex flex-col items-center">
+                        <Link className="h-3 w-3 mb-1" />
+                        <div className="text-center">
+                          <Badge variant="outline" className="bg-blue-50 border-blue-200">
+                            #{index}
+                          </Badge>
+                        </div>
+                      </div>
+                    ) : (
+                      <Badge variant="outline" className="bg-green-50 border-green-200">Genesis</Badge>
+                    )}
+                  </TableCell>
                   <TableCell>
                     {transaction.removed ? (
                       <Badge variant="destructive" className="flex items-center gap-1">
@@ -175,6 +190,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
                     <code className="text-xs bg-gray-100 px-2 py-1 rounded">
                       {formatHash(transaction.hash)}
                     </code>
+                    {index > 0 && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        <span className="flex items-center">
+                          <Link className="h-3 w-3 mr-1" />
+                          {formatHash(transaction.previousHash)}
+                        </span>
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="text-sm">{formatDate(transaction.timestamp)}</TableCell>
                   <TableCell>

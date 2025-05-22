@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Shield } from 'lucide-react';
+import { CheckCircle, Shield, Link } from 'lucide-react';
 
 const Header: React.FC = () => {
   return (
@@ -26,6 +26,23 @@ const Header: React.FC = () => {
               <CheckCircle className="h-4 w-4 mr-1" />
               Local Blockchain
             </Badge>
+          </div>
+        </div>
+      </div>
+      
+      {/* Visual Blockchain Chain */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 pb-4">
+        <div className="flex items-center space-x-1 text-xs text-blue-600 overflow-x-auto pb-1">
+          <div className="bg-blue-100 rounded px-2 py-1 whitespace-nowrap">
+            Genesis Block
+          </div>
+          <Link className="h-3 w-3 flex-shrink-0" />
+          <div className="bg-blue-100 rounded px-2 py-1 whitespace-nowrap flex items-center">
+            <span>Each transaction links to previous hash</span>
+          </div>
+          <Link className="h-3 w-3 flex-shrink-0" />
+          <div className="bg-blue-100 rounded px-2 py-1 whitespace-nowrap">
+            Creating immutable chain
           </div>
         </div>
       </div>
