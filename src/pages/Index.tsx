@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BlockchainService } from '../utils/blockchain';
-import { Transaction } from '../types/blockchain';
+import { Transaction, SystemStats } from '../types/blockchain';
 import { useToast } from '@/hooks/use-toast';
 
 // Import our components
@@ -11,12 +11,12 @@ import SecurityFooter from '@/components/dashboard/SecurityFooter';
 
 const Index = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<SystemStats>({
     totalTransactions: 0,
     totalBeneficiaries: 0,
     totalDistributions: 0,
     pendingVerifications: 0,
-    removedTransactions: 0
+    verifiedTransactions: 0
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -40,8 +40,8 @@ const Index = () => {
     refreshData();
   }, []);
 
-  const activeTransactions = transactions.filter(t => !t.removed);
-  const removedTransactions = transactions.filter(t => t.removed);
+  const activeTransactions = transactions.filter(t => !t.verified);
+  const verifiedTransactions = transactions.filter(t => t.verified);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -67,7 +67,7 @@ const Index = () => {
         <MainContent
           transactions={transactions}
           activeTransactions={activeTransactions}
-          removedTransactions={removedTransactions}
+          removedTransactions={verifiedTransactions}
           refreshData={refreshData}
           stats={stats}
         />

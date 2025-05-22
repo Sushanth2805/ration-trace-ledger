@@ -1,7 +1,7 @@
 
 import React from 'react';
 import StatsCard from '@/components/StatsCard';
-import { BarChart3, Users, Package, Trash2, CheckCircle } from 'lucide-react';
+import { BarChart3, Users, Package, CheckCircle, AlertCircle } from 'lucide-react';
 import { SystemStats } from '@/types/blockchain';
 
 interface StatsDisplayProps {
@@ -30,16 +30,16 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ stats }) => {
         color="blue"
       />
       <StatsCard
-        title="Removed Records"
-        value={stats.removedTransactions}
-        icon={Trash2}
-        color="red"
-      />
-      <StatsCard
-        title="Active Records"
-        value={stats.totalTransactions - stats.removedTransactions}
+        title="Verified Records"
+        value={stats.verifiedTransactions}
         icon={CheckCircle}
         color="green"
+      />
+      <StatsCard
+        title="Pending Verification"
+        value={stats.totalTransactions - stats.verifiedTransactions}
+        icon={AlertCircle}
+        color="amber"
       />
     </div>
   );
