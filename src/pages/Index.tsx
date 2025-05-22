@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { BlockchainService } from '../utils/blockchain';
 import { ContractService } from '../utils/contractService';
@@ -10,6 +9,7 @@ import StatsCard from '../components/StatsCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { 
   Users, 
   Package, 
@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);

@@ -60,7 +60,18 @@ export class ContractService {
         } else if (network.chainId === 80001) {
           // Mumbai testnet
           this.contractAddress = process.env.MUMBAI_CONTRACT_ADDRESS || this.DEMO_CONTRACT_ADDRESS;
+        } else {
+          // For any other network, use the demo address
+          this.contractAddress = this.DEMO_CONTRACT_ADDRESS;
         }
+
+        // Ensure we have a valid contract address
+        if (!this.contractAddress) {
+          console.error("No contract address specified");
+          this.contractAddress = this.DEMO_CONTRACT_ADDRESS;
+        }
+
+        console.log("Using contract address:", this.contractAddress);
 
         // Ask user to connect their wallet
         await this.provider.send("eth_requestAccounts", []);
@@ -143,6 +154,7 @@ export class ContractService {
       if (!this.contract) throw new Error("Contract not initialized");
       
       const count = await this.contract.getTransactionCount();
+      console.log("Contract transaction count:", count.toNumber());
       const transactions: ContractTransaction[] = [];
       
       for (let i = 0; i < count; i++) {
