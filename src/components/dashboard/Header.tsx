@@ -3,12 +3,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Shield } from 'lucide-react';
 
-interface HeaderProps {
-  blockchainMode: boolean;
-  ethConnected: boolean;
-}
-
-const Header: React.FC<HeaderProps> = ({ blockchainMode, ethConnected }) => {
+const Header: React.FC = () => {
   return (
     <div className="bg-white shadow-lg border-b-4 border-blue-600">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -29,7 +24,7 @@ const Header: React.FC<HeaderProps> = ({ blockchainMode, ethConnected }) => {
           <div className="flex items-center space-x-2 mt-4 md:mt-0">
             <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
               <CheckCircle className="h-4 w-4 mr-1" />
-              {blockchainMode && ethConnected ? "Ethereum Blockchain" : "Local Blockchain"}
+              Local Blockchain
             </Badge>
           </div>
         </div>

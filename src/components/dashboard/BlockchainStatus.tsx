@@ -6,14 +6,10 @@ import { Shield, CheckCircle } from 'lucide-react';
 import { Transaction } from '@/types/blockchain';
 
 interface BlockchainStatusProps {
-  blockchainMode: boolean;
-  ethConnected: boolean;
   transactions: Transaction[];
 }
 
 const BlockchainStatus: React.FC<BlockchainStatusProps> = ({
-  blockchainMode,
-  ethConnected,
   transactions
 }) => {
   return (
@@ -27,17 +23,9 @@ const BlockchainStatus: React.FC<BlockchainStatusProps> = ({
       <CardContent>
         <div className="flex items-center justify-between">
           <span>Type:</span>
-          <Badge variant="outline" className={blockchainMode && ethConnected ? "bg-purple-100 text-purple-800" : "bg-blue-100 text-blue-800"}>
-            {blockchainMode && ethConnected ? (
-              <>
-                Ethereum/Polygon
-              </>
-            ) : (
-              <>
-                <Shield className="h-4 w-4 mr-1" />
-                Local Blockchain
-              </>
-            )}
+          <Badge variant="outline" className="bg-blue-100 text-blue-800">
+            <Shield className="h-4 w-4 mr-1" />
+            Local Blockchain
           </Badge>
         </div>
         <div className="flex items-center justify-between mt-2">

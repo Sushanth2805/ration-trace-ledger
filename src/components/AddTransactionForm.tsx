@@ -5,10 +5,9 @@ import { useFormSubmit } from './transaction-form/FormSubmitHandler';
 
 interface AddTransactionFormProps {
   onTransactionAdded: () => void;
-  useBlockchain: boolean;
 }
 
-const AddTransactionForm: React.FC<AddTransactionFormProps> = ({ onTransactionAdded, useBlockchain }) => {
+const AddTransactionForm: React.FC<AddTransactionFormProps> = ({ onTransactionAdded }) => {
   const [formData, setFormData] = useState({
     beneficiaryName: '',
     beneficiaryId: '',
@@ -37,7 +36,6 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({ onTransactionAd
     
     await handleSubmit({
       formData,
-      useBlockchain,
       onSuccess: onTransactionAdded,
       resetForm
     });
@@ -52,8 +50,8 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({ onTransactionAd
       isSubmitting={isSubmitting}
       formData={formData}
       setFormData={setFormData}
-      submitButtonText={useBlockchain ? 'Add Transaction to Ethereum Blockchain' : 'Add Transaction to Local Blockchain'}
-      submitButtonClass={useBlockchain ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}
+      submitButtonText="Add Transaction to Blockchain"
+      submitButtonClass="bg-blue-600 hover:bg-blue-700"
     />
   );
 };

@@ -1,7 +1,5 @@
 
-import { TransactionData } from '@/types/contract';
 import { BlockchainService } from '../../utils/blockchain';
-import { ContractService } from '../../utils/contractService';
 import { useToast } from '@/hooks/use-toast';
 
 interface FormSubmitProps {
@@ -13,7 +11,6 @@ interface FormSubmitProps {
     shopId: string;
     officerName: string;
   };
-  useBlockchain: boolean;
   onSuccess: () => void;
   resetForm: () => void;
 }
@@ -21,7 +18,7 @@ interface FormSubmitProps {
 export const useFormSubmit = () => {
   const { toast } = useToast();
 
-  const handleSubmit = async ({ formData, useBlockchain, onSuccess, resetForm }: FormSubmitProps) => {
+  const handleSubmit = async ({ formData, onSuccess, resetForm }: FormSubmitProps) => {
     // Validation
     if (!formData.beneficiaryName || !formData.beneficiaryId || !formData.itemType || 
         !formData.quantity || !formData.shopId || !formData.officerName) {
@@ -34,55 +31,31 @@ export const useFormSubmit = () => {
     }
 
     try {
-      let transactionId;
+      // Use the local blockchain service
+      const blockchain = BlockchainService.getInstance();
+      const transaction = blockchain.addTransaction({
+        beneficiaryName: formData.beneficiaryName,
+        beneficiaryId: formData.beneficiaryId,
+        itemType: formData.itemType,
+        quantity: parseInt(formData.quantity),
+        shopId: formData.shopId,
+        officerName: formData.officerName
+      });
       
-      if (useBlockchain) {
-        // Use the smart contract service for blockchain
-        const contractService = ContractService.getInstance();
-        const connected = await contractService.isConnected();
-        
-        if (!connected) {
-          const initialized = await contractService.init();
-          if (!initialized) {
-            throw new Error("Failed to initialize blockchain connection");
-          }
-        }
-        
-        transactionId = await contractService.addTransaction({
-          beneficiaryName: formData.beneficiaryName,
-          beneficiaryId: formData.beneficiaryId,
-          itemType: formData.itemType,
-          quantity: parseInt(formData.quantity),
-          shopId: formData.shopId,
-          officerName: formData.officerName
-        });
-      } else {
-        // Use the local blockchain service
-        const blockchain = BlockchainService.getInstance();
-        const transaction = blockchain.addTransaction({
-          beneficiaryName: formData.beneficiaryName,
-          beneficiaryId: formData.beneficiaryId,
-          itemType: formData.itemType,
-          quantity: parseInt(formData.quantity),
-          shopId: formData.shopId,
-          officerName: formData.officerName
-        });
-        transactionId = transaction.id;
-      }
-      
-      let successMessage = "Transaction recorded successfully";
-      if (useBlockchain) {
-        successMessage += " on the blockchain";
-      }
+      const transactionId = transaction.id;
+      const successMessage = "Transaction recorded successfully";
       
       if (transactionId) {
-        successMessage += ` with ID: ${typeof transactionId === 'string' ? transactionId.substring(0, 8) : transactionId}...`;
+        toast({
+          title: "Transaction Added",
+          description: `${successMessage} with ID: ${transactionId.substring(0, 8)}...`,
+        });
+      } else {
+        toast({
+          title: "Transaction Added",
+          description: successMessage,
+        });
       }
-      
-      toast({
-        title: "Transaction Added",
-        description: successMessage,
-      });
 
       resetForm();
       onSuccess();
