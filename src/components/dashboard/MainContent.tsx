@@ -1,4 +1,3 @@
-
 import React from 'react';
 import AddTransactionForm from '@/components/AddTransactionForm';
 import BlockchainStatus from './BlockchainStatus';
@@ -22,6 +21,21 @@ const MainContent: React.FC<MainContentProps> = ({
   blockchainMode,
   ethConnected
 }) => {
+  // If we're in Ethereum mode, only show the transaction form
+  if (blockchainMode && ethConnected) {
+    return (
+      <div className="flex justify-center">
+        <div className="w-full max-w-md">
+          <AddTransactionForm 
+            onTransactionAdded={refreshData}
+            useBlockchain={blockchainMode && ethConnected}
+          />
+        </div>
+      </div>
+    );
+  }
+  
+  // Otherwise show the normal layout
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
       {/* Add Transaction Form */}
@@ -45,7 +59,7 @@ const MainContent: React.FC<MainContentProps> = ({
           activeTransactions={activeTransactions}
           removedTransactions={removedTransactions}
           onUpdate={refreshData}
-          blockchainMode={blockchainMode && ethConnected} // Pass blockchainMode and ethConnected status
+          blockchainMode={blockchainMode && ethConnected}
         />
       </div>
     </div>

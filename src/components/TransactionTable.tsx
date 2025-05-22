@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,57 +41,41 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
     setIsProcessing(true);
     
     try {
-      // Check if we're using Ethereum mode
-      const isEthereumMode = window.ethereum && window.ethereum.isMetaMask;
+      // Check if verification code matches the demo code
+      const demoCode = "GOVT2024";
       
-      if (isEthereumMode) {
-        // Use ContractService for Ethereum mode
-        const contractService = ContractService.getInstance();
-        const success = await contractService.requestRemoval(
-          Number(selectedTransaction.id),
-          verificationCode,
-          verifierName,
-          removalReason
-        );
-        
-        if (success) {
-          toast({
-            title: "Transaction Removed",
-            description: "Transaction has been marked as removed and recorded in audit trail",
-          });
-          setIsDialogOpen(false);
-          // Data will refresh automatically via event listener
-        } else {
-          toast({
-            title: "Verification Failed",
-            description: "Invalid verification code or transaction not found",
-            variant: "destructive"
-          });
-        }
+      if (verificationCode !== demoCode) {
+        toast({
+          title: "Verification Failed",
+          description: "Invalid verification code",
+          variant: "destructive"
+        });
+        setIsProcessing(false);
+        return;
+      }
+      
+      // Use BlockchainService for local mode
+      const blockchain = BlockchainService.getInstance();
+      const success = blockchain.requestRemoval(
+        selectedTransaction.id,
+        verificationCode,
+        verifierName,
+        removalReason
+      );
+      
+      if (success) {
+        toast({
+          title: "Transaction Removed",
+          description: "Transaction has been marked as removed and recorded in audit trail",
+        });
+        setIsDialogOpen(false);
+        onUpdate();
       } else {
-        // Use BlockchainService for local mode
-        const blockchain = BlockchainService.getInstance();
-        const success = blockchain.requestRemoval(
-          selectedTransaction.id,
-          verificationCode,
-          verifierName,
-          removalReason
-        );
-        
-        if (success) {
-          toast({
-            title: "Transaction Removed",
-            description: "Transaction has been marked as removed and recorded in audit trail",
-          });
-          setIsDialogOpen(false);
-          onUpdate();
-        } else {
-          toast({
-            title: "Verification Failed",
-            description: "Invalid verification code or transaction not found",
-            variant: "destructive"
-          });
-        }
+        toast({
+          title: "Removal Failed",
+          description: "Failed to remove transaction",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error("Error removing transaction:", error);
