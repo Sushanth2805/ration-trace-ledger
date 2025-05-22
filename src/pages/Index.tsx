@@ -18,8 +18,7 @@ import {
   Shield, 
   CheckCircle,
   Trash2,
-  BarChart3,
-  Ethereum
+  BarChart3
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -126,7 +125,6 @@ const Index = () => {
           />
           {blockchainMode && (
             <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300">
-              <Ethereum className="h-4 w-4 mr-1" />
               Ethereum Mode
             </Badge>
           )}
@@ -196,7 +194,6 @@ const Index = () => {
                   <Badge variant="outline" className={blockchainMode && ethConnected ? "bg-purple-100 text-purple-800" : "bg-blue-100 text-blue-800"}>
                     {blockchainMode && ethConnected ? (
                       <>
-                        <Ethereum className="h-4 w-4 mr-1" />
                         Ethereum/Polygon
                       </>
                     ) : (
@@ -283,7 +280,7 @@ const Index = () => {
                 <span>Audit Trail Preserved</span>
               </div>
               <div className="flex items-center justify-center space-x-2">
-                <Ethereum className="h-4 w-4 text-purple-600" />
+                <TrendingUp className="h-4 w-4 text-purple-600" />
                 <span>Smart Contract Compatible</span>
               </div>
             </div>
