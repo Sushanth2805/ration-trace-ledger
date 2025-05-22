@@ -9,12 +9,14 @@ interface TransactionTabsProps {
   activeTransactions: Transaction[];
   removedTransactions: Transaction[];
   onUpdate: () => void;
+  blockchainMode?: boolean; // Add blockchainMode prop
 }
 
 const TransactionTabs: React.FC<TransactionTabsProps> = ({
   activeTransactions,
   removedTransactions,
-  onUpdate
+  onUpdate,
+  blockchainMode = false // Default to false if not provided
 }) => {
   return (
     <Tabs defaultValue="active" className="w-full">
@@ -33,13 +35,15 @@ const TransactionTabs: React.FC<TransactionTabsProps> = ({
         <TransactionTable 
           transactions={activeTransactions} 
           onUpdate={onUpdate} 
+          blockchainMode={blockchainMode} // Pass the blockchainMode prop
         />
       </TabsContent>
       
       <TabsContent value="removed" className="mt-6">
         <TransactionTable 
           transactions={removedTransactions} 
-          onUpdate={onUpdate} 
+          onUpdate={onUpdate}
+          blockchainMode={blockchainMode} // Pass the blockchainMode prop
         />
       </TabsContent>
     </Tabs>

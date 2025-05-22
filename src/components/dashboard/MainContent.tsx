@@ -45,6 +45,7 @@ const MainContent: React.FC<MainContentProps> = ({
           activeTransactions={activeTransactions}
           removedTransactions={removedTransactions}
           onUpdate={refreshData}
+          blockchainMode={blockchainMode && ethConnected} // Pass blockchainMode and ethConnected status
         />
       </div>
     </div>

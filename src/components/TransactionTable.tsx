@@ -12,13 +12,15 @@ import { BlockchainService } from '../utils/blockchain';
 import { ContractService } from '../utils/contractService';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, Shield, CheckCircle, AlertCircle } from 'lucide-react';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 interface TransactionTableProps {
   transactions: Transaction[];
   onUpdate: () => void;
+  blockchainMode?: boolean;
 }
 
-const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpdate }) => {
+const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpdate, blockchainMode = false }) => {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
   const [verifierName, setVerifierName] = useState('');
@@ -115,6 +117,28 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
     return `${hash.substring(0, 8)}...${hash.substring(hash.length - 8)}`;
   };
 
+  // Show message when in ethereum mode and no transactions
+  if (blockchainMode && transactions.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-blue-900 flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Blockchain Transaction Records
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-center py-8">
+          <p className="text-gray-500">
+            No transactions found in the blockchain.
+          </p>
+          <p className="text-gray-500 text-sm mt-2">
+            Please add a transaction using the form on the left.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -125,29 +149,29 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b-2 border-gray-200">
-                <th className="text-left p-3 font-semibold text-gray-700">Status</th>
-                <th className="text-left p-3 font-semibold text-gray-700">Beneficiary</th>
-                <th className="text-left p-3 font-semibold text-gray-700">Item</th>
-                <th className="text-left p-3 font-semibold text-gray-700">Quantity</th>
-                <th className="text-left p-3 font-semibold text-gray-700">Shop ID</th>
-                <th className="text-left p-3 font-semibold text-gray-700">Officer</th>
-                <th className="text-left p-3 font-semibold text-gray-700">Hash</th>
-                <th className="text-left p-3 font-semibold text-gray-700">Date</th>
-                <th className="text-left p-3 font-semibold text-gray-700">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Status</TableHead>
+                <TableHead>Beneficiary</TableHead>
+                <TableHead>Item</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Shop ID</TableHead>
+                <TableHead>Officer</TableHead>
+                <TableHead>Hash</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {transactions.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="text-center py-4 text-gray-500">No transactions found</td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-4 text-gray-500">No transactions found</TableCell>
+                </TableRow>
               ) : (
                 transactions.map((transaction) => (
-                  <tr key={transaction.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="p-3">
+                  <TableRow key={transaction.id}>
+                    <TableCell>
                       {transaction.removed ? (
                         <Badge variant="destructive" className="flex items-center gap-1">
                           <AlertCircle className="h-3 w-3" />
@@ -159,25 +183,25 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
                           Active
                         </Badge>
                       )}
-                    </td>
-                    <td className="p-3">
+                    </TableCell>
+                    <TableCell>
                       <div>
                         <div className="font-medium">{transaction.beneficiaryName}</div>
                         <div className="text-sm text-gray-500">{transaction.beneficiaryId}</div>
                       </div>
-                    </td>
-                    <td className="p-3">{transaction.itemType}</td>
-                    <td className="p-3">{transaction.quantity} kg/L</td>
-                    <td className="p-3">{transaction.shopId}</td>
-                    <td className="p-3">{transaction.officerName}</td>
-                    <td className="p-3">
+                    </TableCell>
+                    <TableCell>{transaction.itemType}</TableCell>
+                    <TableCell>{transaction.quantity} kg/L</TableCell>
+                    <TableCell>{transaction.shopId}</TableCell>
+                    <TableCell>{transaction.officerName}</TableCell>
+                    <TableCell>
                       <code className="text-xs bg-gray-100 px-2 py-1 rounded">
                         {formatHash(transaction.hash)}
                       </code>
-                    </td>
-                    <td className="p-3 text-sm">{formatDate(transaction.timestamp)}</td>
-                    <td className="p-3">
-                      {!transaction.removed ? (
+                    </TableCell>
+                    <TableCell className="text-sm">{formatDate(transaction.timestamp)}</TableCell>
+                    <TableCell>
+                      {!transaction.removed && !blockchainMode ? (
                         <Dialog open={isDialogOpen && selectedTransaction?.id === transaction.id} onOpenChange={(open) => {
                           setIsDialogOpen(open);
                           if (open) setSelectedTransaction(transaction);
@@ -238,19 +262,19 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
                             </div>
                           </DialogContent>
                         </Dialog>
-                      ) : (
+                      ) : transaction.removed ? (
                         <div className="text-sm text-gray-500">
                           <div>Removed by: {transaction.verifierName}</div>
                           <div className="truncate max-w-[150px]">Reason: {transaction.removalReason}</div>
                           <div>Date: {transaction.removalTimestamp ? formatDate(transaction.removalTimestamp) : 'N/A'}</div>
                         </div>
-                      )}
-                    </td>
-                  </tr>
+                      ) : null}
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </CardContent>
     </Card>
