@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Transaction } from '../types/blockchain';
 import { BlockchainService } from '../utils/blockchain';
+import { ContractService } from '../utils/contractService';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, Shield, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -23,9 +23,10 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
   const [verifierName, setVerifierName] = useState('');
   const [removalReason, setRemovalReason] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
-  const handleRemovalRequest = () => {
+  const handleRemovalRequest = async () => {
     if (!selectedTransaction || !verificationCode || !verifierName || !removalReason) {
       toast({
         title: "Validation Error",
@@ -34,33 +35,75 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
       });
       return;
     }
-
-    const blockchain = BlockchainService.getInstance();
-    const success = blockchain.requestRemoval(
-      selectedTransaction.id,
-      verificationCode,
-      verifierName,
-      removalReason
-    );
-
-    if (success) {
+    
+    setIsProcessing(true);
+    
+    try {
+      // Check if we're using Ethereum mode
+      const isEthereumMode = window.ethereum && await window.ethereum._metamask?.isUnlocked();
+      
+      if (isEthereumMode) {
+        // Use ContractService for Ethereum mode
+        const contractService = ContractService.getInstance();
+        const success = await contractService.requestRemoval(
+          Number(selectedTransaction.id),
+          verificationCode,
+          verifierName,
+          removalReason
+        );
+        
+        if (success) {
+          toast({
+            title: "Transaction Removed",
+            description: "Transaction has been marked as removed and recorded in audit trail",
+          });
+          setIsDialogOpen(false);
+          // Data will refresh automatically via event listener
+        } else {
+          toast({
+            title: "Verification Failed",
+            description: "Invalid verification code or transaction not found",
+            variant: "destructive"
+          });
+        }
+      } else {
+        // Use BlockchainService for local mode
+        const blockchain = BlockchainService.getInstance();
+        const success = blockchain.requestRemoval(
+          selectedTransaction.id,
+          verificationCode,
+          verifierName,
+          removalReason
+        );
+        
+        if (success) {
+          toast({
+            title: "Transaction Removed",
+            description: "Transaction has been marked as removed and recorded in audit trail",
+          });
+          setIsDialogOpen(false);
+          onUpdate();
+        } else {
+          toast({
+            title: "Verification Failed",
+            description: "Invalid verification code or transaction not found",
+            variant: "destructive"
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error removing transaction:", error);
       toast({
-        title: "Transaction Removed",
-        description: "Transaction has been marked as removed and recorded in audit trail",
-      });
-      setIsDialogOpen(false);
-      onUpdate();
-    } else {
-      toast({
-        title: "Verification Failed",
-        description: "Invalid verification code or transaction not found",
+        title: "Error",
+        description: "Failed to process transaction removal",
         variant: "destructive"
       });
+    } finally {
+      setIsProcessing(false);
+      setVerificationCode('');
+      setVerifierName('');
+      setRemovalReason('');
     }
-
-    setVerificationCode('');
-    setVerifierName('');
-    setRemovalReason('');
   };
 
   const formatDate = (timestamp: number) => {

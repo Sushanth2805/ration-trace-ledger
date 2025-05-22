@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { BlockchainService } from '../utils/blockchain';
 import { ContractService } from '../utils/contractService';
@@ -18,7 +19,8 @@ import {
   Shield, 
   CheckCircle,
   Trash2,
-  BarChart3
+  BarChart3,
+  RefreshCw
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -35,39 +37,51 @@ const Index = () => {
   });
   const [blockchainMode, setBlockchainMode] = useState(false);
   const [ethConnected, setEthConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const refreshData = async () => {
-    if (blockchainMode && window.ethereum) {
-      try {
-        const contractService = ContractService.getInstance();
-        const connected = await contractService.isConnected();
-        
-        if (connected) {
-          setEthConnected(true);
-          const txs = await contractService.getTransactions();
-          setTransactions(txs as unknown as Transaction[]);
+    setIsLoading(true);
+    try {
+      if (blockchainMode && window.ethereum) {
+        try {
+          const contractService = ContractService.getInstance();
+          const connected = await contractService.isConnected();
           
-          const contractStats = await contractService.getStats();
-          setStats({
-            totalTransactions: contractStats.totalTransactions,
-            totalBeneficiaries: new Set(txs.map(t => t.beneficiaryId)).size,
-            totalDistributions: txs.reduce((sum, t) => sum + t.quantity, 0),
-            pendingVerifications: 0,
-            removedTransactions: contractStats.removedTransactions
+          if (connected) {
+            setEthConnected(true);
+            const txs = await contractService.getTransactions();
+            setTransactions(txs as unknown as Transaction[]);
+            
+            const contractStats = await contractService.getStats();
+            setStats({
+              totalTransactions: contractStats.totalTransactions,
+              totalBeneficiaries: new Set(txs.map(t => t.beneficiaryId)).size,
+              totalDistributions: txs.reduce((sum, t) => sum + t.quantity, 0),
+              pendingVerifications: 0,
+              removedTransactions: contractStats.removedTransactions
+            });
+          } else {
+            // Fallback to local data
+            setEthConnected(false);
+            loadLocalData();
+          }
+        } catch (error) {
+          console.error("Error fetching blockchain data:", error);
+          toast({
+            title: "Blockchain Error",
+            description: "Failed to fetch data from blockchain. Falling back to local data.",
+            variant: "destructive"
           });
-        } else {
-          // Fallback to local data
           setEthConnected(false);
+          // Fallback to local data
           loadLocalData();
         }
-      } catch (error) {
-        console.error("Error fetching blockchain data:", error);
-        setEthConnected(false);
-        // Fallback to local data
+      } else {
         loadLocalData();
       }
-    } else {
-      loadLocalData();
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -79,6 +93,27 @@ const Index = () => {
 
   useEffect(() => {
     refreshData();
+  }, [blockchainMode]);
+
+  // Set up contract service listeners
+  useEffect(() => {
+    if (blockchainMode && window.ethereum) {
+      const contractService = ContractService.getInstance();
+      
+      // Set up a transaction listener that will refresh data when transactions change
+      const transactionListener = () => {
+        console.log("Transaction change detected, refreshing data");
+        refreshData();
+      };
+      
+      // Add the listener
+      contractService.addTransactionListener(transactionListener);
+      
+      // Clean up by removing the listener when the component unmounts
+      return () => {
+        contractService.removeTransactionListener(transactionListener);
+      };
+    }
   }, [blockchainMode]);
 
   const activeTransactions = transactions.filter(t => !t.removed);
@@ -115,20 +150,34 @@ const Index = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Blockchain Mode Toggle */}
-        <div className="mb-6 flex items-center justify-end space-x-2">
-          <Label htmlFor="blockchain-mode" className="text-sm font-medium">
-            Use Ethereum Blockchain
-          </Label>
-          <Switch
-            id="blockchain-mode"
-            checked={blockchainMode}
-            onCheckedChange={setBlockchainMode}
-          />
-          {blockchainMode && (
-            <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300">
-              Ethereum Mode
-            </Badge>
-          )}
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="blockchain-mode" className="text-sm font-medium">
+              Use Ethereum Blockchain
+            </Label>
+            <Switch
+              id="blockchain-mode"
+              checked={blockchainMode}
+              onCheckedChange={setBlockchainMode}
+            />
+            {blockchainMode && (
+              <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300">
+                Ethereum Mode
+              </Badge>
+            )}
+          </div>
+          
+          {/* Refresh Button */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={refreshData} 
+            disabled={isLoading}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh Data
+          </Button>
         </div>
 
         {/* Blockchain Connection (only visible in blockchain mode) */}

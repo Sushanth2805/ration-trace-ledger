@@ -36,6 +36,9 @@ export class ContractService {
   // This address is just a placeholder
   private DEMO_CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
+  // Add event emitter for transactions
+  private transactionListeners: Array<() => void> = [];
+
   private constructor() {}
 
   public static getInstance(): ContractService {
@@ -83,6 +86,11 @@ export class ContractService {
           signer
         );
         
+        // Set up event listeners for the contract
+        if (this.contract) {
+          this.setupEventListeners();
+        }
+        
         console.log("Smart contract connected at:", this.contractAddress);
         return true;
       }
@@ -92,6 +100,41 @@ export class ContractService {
       console.error("Failed to connect to contract:", error);
       return false;
     }
+  }
+
+  // Add event listener setup
+  private setupEventListeners(): void {
+    if (!this.contract) return;
+    
+    // Listen for TransactionAdded events from the contract
+    this.contract.on("TransactionAdded", (id, beneficiaryId, itemType, quantity, timestamp) => {
+      console.log("Transaction added event received:", id.toNumber());
+      // Notify all listeners that a transaction was added
+      this.notifyTransactionChange();
+    });
+    
+    // Listen for TransactionRemoved events
+    this.contract.on("TransactionRemoved", (id, verifierName, removalReason, removalTimestamp) => {
+      console.log("Transaction removed event received:", id.toNumber());
+      // Notify all listeners that a transaction was removed
+      this.notifyTransactionChange();
+    });
+  }
+
+  // Add listener registration methods
+  public addTransactionListener(listener: () => void): void {
+    this.transactionListeners.push(listener);
+  }
+
+  public removeTransactionListener(listener: () => void): void {
+    const index = this.transactionListeners.indexOf(listener);
+    if (index > -1) {
+      this.transactionListeners.splice(index, 1);
+    }
+  }
+
+  private notifyTransactionChange(): void {
+    this.transactionListeners.forEach(listener => listener());
   }
 
   public async isConnected(): Promise<boolean> {
@@ -118,6 +161,9 @@ export class ContractService {
       const event = receipt.events?.find(e => e.event === "TransactionAdded");
       const id = event?.args?.id.toNumber();
       
+      // Manually notify listeners since we've waited for the receipt
+      this.notifyTransactionChange();
+      
       return id !== undefined ? id.toString() : null;
     } catch (error) {
       console.error("Error adding transaction:", error);
@@ -142,6 +188,10 @@ export class ContractService {
       );
       
       await tx.wait();
+      
+      // Manually notify listeners since we've waited for the receipt
+      this.notifyTransactionChange();
+      
       return true;
     } catch (error) {
       console.error("Error removing transaction:", error);
