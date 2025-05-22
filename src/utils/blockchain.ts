@@ -144,12 +144,12 @@ export class BlockchainService {
         return false;
       }
 
-      const recalculatedHash = this.calculateTransactionHash({
+      const calculatedHash = this.calculateTransactionHash({
         ...currentTransaction,
-        hash: undefined as any
+        hash: undefined as unknown as string // This is the key fix - we're excluding the hash property properly
       });
 
-      if (currentTransaction.hash !== recalculatedHash) {
+      if (currentTransaction.hash !== calculatedHash) {
         return false;
       }
     }
