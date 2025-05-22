@@ -1,4 +1,3 @@
-
 import crypto from 'crypto-js';
 import { Transaction, Block, SystemStats } from '../types/blockchain';
 
@@ -45,21 +44,26 @@ export class BlockchainService {
     const lastTransaction = this.transactions[this.transactions.length - 1];
     const previousHash = lastTransaction ? lastTransaction.hash : '0';
     
-    const transaction: Transaction = {
+    const transaction: Omit<Transaction, 'hash'> = {
       ...transactionData,
       id: crypto.lib.WordArray.random(16).toString(),
       timestamp: Date.now(),
       previousHash,
-      hash: '',
       removed: false
     };
 
-    transaction.hash = this.calculateTransactionHash(transaction);
-    this.transactions.push(transaction);
+    const hash = this.calculateTransactionHash(transaction);
+    
+    const completeTransaction: Transaction = {
+      ...transaction,
+      hash
+    };
+
+    this.transactions.push(completeTransaction);
     this.saveToStorage();
     
-    console.log('New transaction added to blockchain:', transaction);
-    return transaction;
+    console.log('New transaction added to blockchain:', completeTransaction);
+    return completeTransaction;
   }
 
   public requestRemoval(transactionId: string, verificationCode: string, verifierName: string, reason: string): boolean {

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Shield, AlertTriangle } from 'lucide-react';
 import { ContractService } from '../utils/contractService';
+import { ethers } from 'ethers';
 
 const BlockchainConnection: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
