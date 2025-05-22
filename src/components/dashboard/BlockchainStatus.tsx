@@ -25,7 +25,7 @@ const BlockchainStatus: React.FC<BlockchainStatusProps> = ({
       <CardHeader>
         <CardTitle className="text-green-900 flex items-center gap-2">
           <Shield className="h-5 w-5" />
-          Blockchain Status
+          Status
         </CardTitle>
       </CardHeader>
       <CardContent>
