@@ -1,3 +1,4 @@
+
 import crypto from 'crypto-js';
 import { Transaction, Block, SystemStats } from '../types/blockchain';
 
@@ -40,7 +41,7 @@ export class BlockchainService {
     return crypto.SHA256(data).toString();
   }
 
-  public addTransaction(transactionData: Omit<Transaction, 'id' | 'hash' | 'previousHash' | 'timestamp' | 'removed'>): Transaction {
+  public addTransaction(transactionData: Omit<Transaction, 'id' | 'hash' | 'previousHash' | 'timestamp' | 'verified'>): Transaction {
     const lastTransaction = this.transactions[this.transactions.length - 1];
     const previousHash = lastTransaction ? lastTransaction.hash : '0';
     
@@ -49,7 +50,7 @@ export class BlockchainService {
       id: crypto.lib.WordArray.random(16).toString(),
       timestamp: Date.now(),
       previousHash,
-      removed: false
+      verified: false
     };
 
     const hash = this.calculateTransactionHash(transaction);
@@ -66,7 +67,7 @@ export class BlockchainService {
     return completeTransaction;
   }
 
-  public requestRemoval(transactionId: string, verificationCode: string, verifierName: string, reason: string): boolean {
+  public verifyTransaction(transactionId: string, verificationCode: string, verifierName: string, reason: string): boolean {
     if (verificationCode !== 'GOVT2024') {
       console.log('Invalid verification code');
       return false;
@@ -78,18 +79,18 @@ export class BlockchainService {
       return false;
     }
 
-    if (transaction.removed) {
-      console.log('Transaction already removed');
+    if (transaction.verified) {
+      console.log('Transaction already verified');
       return false;
     }
 
-    transaction.removed = true;
-    transaction.removalReason = reason;
+    transaction.verified = true;
+    transaction.verificationReason = reason;
     transaction.verifierName = verifierName;
-    transaction.removalTimestamp = Date.now();
+    transaction.verificationTimestamp = Date.now();
 
     this.saveToStorage();
-    console.log('Transaction marked as removed:', transaction);
+    console.log('Transaction verified:', transaction);
     return true;
   }
 
@@ -97,17 +98,17 @@ export class BlockchainService {
     return [...this.transactions];
   }
 
-  public getActiveTransactions(): Transaction[] {
-    return this.transactions.filter(t => !t.removed);
+  public getUnverifiedTransactions(): Transaction[] {
+    return this.transactions.filter(t => !t.verified);
   }
 
-  public getRemovedTransactions(): Transaction[] {
-    return this.transactions.filter(t => t.removed);
+  public getVerifiedTransactions(): Transaction[] {
+    return this.transactions.filter(t => t.verified);
   }
 
   public getStats(): SystemStats {
     const totalTransactions = this.transactions.length;
-    const removedTransactions = this.transactions.filter(t => t.removed).length;
+    const verifiedTransactions = this.transactions.filter(t => t.verified).length;
     const totalBeneficiaries = new Set(this.transactions.map(t => t.beneficiaryId)).size;
     const totalDistributions = this.transactions.reduce((sum, t) => sum + t.quantity, 0);
 
@@ -116,7 +117,7 @@ export class BlockchainService {
       totalBeneficiaries,
       totalDistributions,
       pendingVerifications: 0, // For demo purposes
-      removedTransactions
+      verifiedTransactions
     };
   }
 

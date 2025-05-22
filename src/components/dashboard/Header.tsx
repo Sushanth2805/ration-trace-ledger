@@ -24,7 +24,7 @@ const Header: React.FC = () => {
           <div className="flex items-center space-x-2 mt-4 md:mt-0">
             <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
               <CheckCircle className="h-4 w-4 mr-1" />
-              Local Blockchain
+              Immutable Verification System
             </Badge>
           </div>
         </div>

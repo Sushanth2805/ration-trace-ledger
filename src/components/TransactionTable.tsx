@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Transaction } from '../types/blockchain';
 import { BlockchainService } from '../utils/blockchain';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Shield, CheckCircle, AlertCircle, Link } from 'lucide-react';
+import { Shield, CheckCircle, AlertCircle, Link } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 interface TransactionTableProps {
@@ -22,13 +22,13 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
   const [verifierName, setVerifierName] = useState('');
-  const [removalReason, setRemovalReason] = useState('');
+  const [verificationReason, setVerificationReason] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
-  const handleRemovalRequest = async () => {
-    if (!selectedTransaction || !verificationCode || !verifierName || !removalReason) {
+  const handleVerification = async () => {
+    if (!selectedTransaction || !verificationCode || !verifierName || !verificationReason) {
       toast({
         title: "Validation Error",
         description: "Please fill in all fields",
@@ -55,39 +55,39 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
       
       // Use BlockchainService for local mode
       const blockchain = BlockchainService.getInstance();
-      const success = blockchain.requestRemoval(
+      const success = blockchain.verifyTransaction(
         selectedTransaction.id,
         verificationCode,
         verifierName,
-        removalReason
+        verificationReason
       );
       
       if (success) {
         toast({
-          title: "Transaction Removed",
-          description: "Transaction has been marked as removed and recorded in audit trail",
+          title: "Transaction Verified",
+          description: "Transaction has been verified and recorded in audit trail",
         });
         setIsDialogOpen(false);
         onUpdate();
       } else {
         toast({
-          title: "Removal Failed",
-          description: "Failed to remove transaction",
+          title: "Verification Failed",
+          description: "Failed to verify transaction",
           variant: "destructive"
         });
       }
     } catch (error) {
-      console.error("Error removing transaction:", error);
+      console.error("Error verifying transaction:", error);
       toast({
         title: "Error",
-        description: "Failed to process transaction removal",
+        description: "Failed to process transaction verification",
         variant: "destructive"
       });
     } finally {
       setIsProcessing(false);
       setVerificationCode('');
       setVerifierName('');
-      setRemovalReason('');
+      setVerificationReason('');
     }
   };
 
@@ -164,15 +164,15 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
                     )}
                   </TableCell>
                   <TableCell>
-                    {transaction.removed ? (
-                      <Badge variant="destructive" className="flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" />
-                        Removed
-                      </Badge>
-                    ) : (
+                    {transaction.verified ? (
                       <Badge variant="default" className="bg-green-100 text-green-800 flex items-center gap-1">
                         <CheckCircle className="h-3 w-3" />
-                        Active
+                        Verified
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-yellow-100 text-yellow-800 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        Pending
                       </Badge>
                     )}
                   </TableCell>
@@ -201,7 +201,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
                   </TableCell>
                   <TableCell className="text-sm">{formatDate(transaction.timestamp)}</TableCell>
                   <TableCell>
-                    {!transaction.removed ? (
+                    {!transaction.verified ? (
                       <Dialog open={isDialogOpen && selectedTransaction?.id === transaction.id} onOpenChange={(open) => {
                         setIsDialogOpen(open);
                         if (open) setSelectedTransaction(transaction);
@@ -210,15 +210,15 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
                           <Button
                             variant="outline"
                             size="sm"
-                            className="text-red-600 border-red-200 hover:bg-red-50"
+                            className="text-green-600 border-green-200 hover:bg-green-50"
                           >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Request Removal
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Verify Record
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Verify Transaction Removal</DialogTitle>
+                            <DialogTitle>Verify Transaction Record</DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4">
                             <div>
@@ -244,30 +244,30 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
                               />
                             </div>
                             <div>
-                              <Label htmlFor="removalReason">Reason for Removal</Label>
+                              <Label htmlFor="verificationReason">Verification Notes</Label>
                               <Textarea
-                                id="removalReason"
-                                value={removalReason}
-                                onChange={(e) => setRemovalReason(e.target.value)}
-                                placeholder="Enter reason for removal"
+                                id="verificationReason"
+                                value={verificationReason}
+                                onChange={(e) => setVerificationReason(e.target.value)}
+                                placeholder="Enter verification notes"
                                 className="mt-1"
                               />
                             </div>
                             <Button 
-                              onClick={handleRemovalRequest}
-                              className="w-full bg-red-600 hover:bg-red-700"
+                              onClick={handleVerification}
+                              className="w-full bg-green-600 hover:bg-green-700"
                               disabled={isProcessing}
                             >
-                              {isProcessing ? 'Processing...' : 'Confirm Removal'}
+                              {isProcessing ? 'Processing...' : 'Confirm Verification'}
                             </Button>
                           </div>
                         </DialogContent>
                       </Dialog>
                     ) : (
                       <div className="text-sm text-gray-500">
-                        <div>Removed by: {transaction.verifierName}</div>
-                        <div className="truncate max-w-[150px]">Reason: {transaction.removalReason}</div>
-                        <div>Date: {transaction.removalTimestamp ? formatDate(transaction.removalTimestamp) : 'N/A'}</div>
+                        <div>Verified by: {transaction.verifierName}</div>
+                        <div className="truncate max-w-[150px]">Notes: {transaction.verificationReason}</div>
+                        <div>Date: {transaction.verificationTimestamp ? formatDate(transaction.verificationTimestamp) : 'N/A'}</div>
                       </div>
                     )}
                   </TableCell>

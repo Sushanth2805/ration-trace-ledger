@@ -17,6 +17,8 @@ const BlockchainStatus: React.FC<BlockchainStatusProps> = ({
   const chainIsValid = transactions.length > 0 
     ? BlockchainService.getInstance().verifyChainIntegrity()
     : true;
+  
+  const verifiedTransactions = transactions.filter(t => t.verified).length;
     
   return (
     <Card className="mt-6">
@@ -44,6 +46,10 @@ const BlockchainStatus: React.FC<BlockchainStatusProps> = ({
         <div className="flex items-center justify-between mt-2">
           <span>Total Blocks:</span>
           <span className="font-semibold">{transactions.length}</span>
+        </div>
+        <div className="flex items-center justify-between mt-2">
+          <span>Verified Records:</span>
+          <span className="font-semibold">{verifiedTransactions}</span>
         </div>
         <div className="flex items-center justify-between mt-2">
           <span>Last Hash:</span>

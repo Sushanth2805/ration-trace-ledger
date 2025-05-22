@@ -10,10 +10,10 @@ export interface Transaction {
   timestamp: number;
   hash: string;
   previousHash: string;
-  removed: boolean;
-  removalReason?: string;
+  verified: boolean;
+  verificationReason?: string;
   verifierName?: string;
-  removalTimestamp?: number;
+  verificationTimestamp?: number;
 }
 
 export interface Block {
@@ -37,5 +37,5 @@ export interface SystemStats {
   totalBeneficiaries: number;
   totalDistributions: number;
   pendingVerifications: number;
-  removedTransactions: number;
+  verifiedTransactions: number;
 }
