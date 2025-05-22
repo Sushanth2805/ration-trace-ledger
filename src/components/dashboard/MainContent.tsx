@@ -1,8 +1,11 @@
+
 import React from 'react';
 import AddTransactionForm from '@/components/AddTransactionForm';
 import BlockchainStatus from './BlockchainStatus';
 import TransactionTabs from './TransactionTabs';
 import { Transaction } from '@/types/blockchain';
+import StatsDisplay from './StatsDisplay';
+import { SystemStats } from '@/types/blockchain';
 
 interface MainContentProps {
   transactions: Transaction[];
@@ -11,6 +14,7 @@ interface MainContentProps {
   refreshData: () => void;
   blockchainMode: boolean;
   ethConnected: boolean;
+  stats: SystemStats;
 }
 
 const MainContent: React.FC<MainContentProps> = ({
@@ -19,13 +23,19 @@ const MainContent: React.FC<MainContentProps> = ({
   removedTransactions,
   refreshData,
   blockchainMode,
-  ethConnected
+  ethConnected,
+  stats
 }) => {
-  // If we're in Ethereum mode, only show the transaction form
+  // If we're in Ethereum mode, only show the transaction form and stats
   if (blockchainMode && ethConnected) {
     return (
-      <div className="flex justify-center">
-        <div className="w-full max-w-md">
+      <div className="flex flex-col items-center">
+        <div className="w-full max-w-md mb-8">
+          {/* Show stats in Ethereum mode too */}
+          <div className="mb-8">
+            <StatsDisplay stats={stats} />
+          </div>
+          
           <AddTransactionForm 
             onTransactionAdded={refreshData}
             useBlockchain={blockchainMode && ethConnected}

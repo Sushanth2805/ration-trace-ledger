@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { BlockchainService } from '../utils/blockchain';
 import { ContractService } from '../utils/contractService';
@@ -9,7 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 // Import our new components
 import Header from '@/components/dashboard/Header';
 import BlockchainModeToggle from '@/components/dashboard/BlockchainModeToggle';
-import StatsDisplay from '@/components/dashboard/StatsDisplay';
 import MainContent from '@/components/dashboard/MainContent';
 import SecurityFooter from '@/components/dashboard/SecurityFooter';
 
@@ -127,10 +125,7 @@ const Index = () => {
           </div>
         )}
 
-        {/* Stats Dashboard */}
-        <StatsDisplay stats={stats} />
-
-        {/* Main Content */}
+        {/* Main Content - Now contains the StatsDisplay */}
         <MainContent
           transactions={transactions}
           activeTransactions={activeTransactions}
@@ -138,6 +133,7 @@ const Index = () => {
           refreshData={refreshData}
           blockchainMode={blockchainMode}
           ethConnected={ethConnected}
+          stats={stats}
         />
 
         {/* Footer */}
