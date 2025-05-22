@@ -144,10 +144,11 @@ export class BlockchainService {
         return false;
       }
 
-      const calculatedHash = this.calculateTransactionHash({
-        ...currentTransaction,
-        hash: undefined as unknown as string // This is the key fix - we're excluding the hash property properly
-      });
+      // Create a new object without the hash property
+      const { hash, ...transactionWithoutHash } = currentTransaction;
+      
+      // Calculate the hash using the transaction data without the hash
+      const calculatedHash = this.calculateTransactionHash(transactionWithoutHash);
 
       if (currentTransaction.hash !== calculatedHash) {
         return false;
