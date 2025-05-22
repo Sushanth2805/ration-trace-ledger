@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,7 +41,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onUpd
     
     try {
       // Check if we're using Ethereum mode
-      const isEthereumMode = window.ethereum && await window.ethereum._metamask?.isUnlocked();
+      const isEthereumMode = window.ethereum && window.ethereum.isMetaMask;
       
       if (isEthereumMode) {
         // Use ContractService for Ethereum mode
