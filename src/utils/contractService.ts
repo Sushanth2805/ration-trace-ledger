@@ -1,30 +1,9 @@
 
 import { ethers } from "ethers";
 import RationDistribution from "../artifacts/contracts/RationDistribution.sol/RationDistribution.json";
-
-interface TransactionData {
-  beneficiaryName: string;
-  beneficiaryId: string;
-  itemType: string;
-  quantity: number;
-  shopId: string;
-  officerName: string;
-}
-
-interface ContractTransaction {
-  id: number;
-  beneficiaryName: string;
-  beneficiaryId: string;
-  itemType: string;
-  quantity: number;
-  shopId: string;
-  officerName: string;
-  timestamp: number;
-  removed: boolean;
-  removalReason: string;
-  verifierName: string;
-  removalTimestamp: number;
-}
+import { ContractConfig } from "./contractConfig";
+import { ContractEventManager } from "./contractEventManager";
+import { TransactionData, ContractTransaction, ContractStats } from "../types/contract";
 
 export class ContractService {
   private static instance: ContractService;
@@ -32,14 +11,14 @@ export class ContractService {
   private contract: ethers.Contract | null = null;
   private contractAddress: string = '';
   
-  // For demo purposes, you could update this to your deployed contract address
-  // This address is just a placeholder
-  private DEMO_CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-
-  // Add event emitter for transactions
-  private transactionListeners: Array<() => void> = [];
-
-  private constructor() {}
+  // Dependency references
+  private contractConfig: ContractConfig;
+  private eventManager: ContractEventManager;
+  
+  private constructor() {
+    this.contractConfig = ContractConfig.getInstance();
+    this.eventManager = ContractEventManager.getInstance();
+  }
 
   public static getInstance(): ContractService {
     if (!ContractService.instance) {
@@ -53,28 +32,8 @@ export class ContractService {
       if (window.ethereum) {
         this.provider = new ethers.providers.Web3Provider(window.ethereum);
         
-        // If in development, use hardhat network
-        const network = await this.provider.getNetwork();
-        
-        // Use local hardhat contract in development
-        if (network.chainId === 31337 || network.chainId === 1337) {
-          // Local hardhat node
-          this.contractAddress = this.DEMO_CONTRACT_ADDRESS;
-        } else if (network.chainId === 80001) {
-          // Mumbai testnet
-          this.contractAddress = process.env.MUMBAI_CONTRACT_ADDRESS || this.DEMO_CONTRACT_ADDRESS;
-        } else {
-          // For any other network, use the demo address
-          this.contractAddress = this.DEMO_CONTRACT_ADDRESS;
-        }
-
-        // Ensure we have a valid contract address
-        if (!this.contractAddress) {
-          console.error("No contract address specified");
-          this.contractAddress = this.DEMO_CONTRACT_ADDRESS;
-        }
-
-        console.log("Using contract address:", this.contractAddress);
+        // Get the appropriate contract address based on network
+        this.contractAddress = await this.contractConfig.determineContractAddress(this.provider);
 
         // Ask user to connect their wallet
         await this.provider.send("eth_requestAccounts", []);
@@ -110,31 +69,24 @@ export class ContractService {
     this.contract.on("TransactionAdded", (id, beneficiaryId, itemType, quantity, timestamp) => {
       console.log("Transaction added event received:", id.toNumber());
       // Notify all listeners that a transaction was added
-      this.notifyTransactionChange();
+      this.eventManager.notifyTransactionChange();
     });
     
     // Listen for TransactionRemoved events
     this.contract.on("TransactionRemoved", (id, verifierName, removalReason, removalTimestamp) => {
       console.log("Transaction removed event received:", id.toNumber());
       // Notify all listeners that a transaction was removed
-      this.notifyTransactionChange();
+      this.eventManager.notifyTransactionChange();
     });
   }
 
   // Add listener registration methods
   public addTransactionListener(listener: () => void): void {
-    this.transactionListeners.push(listener);
+    this.eventManager.addTransactionListener(listener);
   }
 
   public removeTransactionListener(listener: () => void): void {
-    const index = this.transactionListeners.indexOf(listener);
-    if (index > -1) {
-      this.transactionListeners.splice(index, 1);
-    }
-  }
-
-  private notifyTransactionChange(): void {
-    this.transactionListeners.forEach(listener => listener());
+    this.eventManager.removeTransactionListener(listener);
   }
 
   public async isConnected(): Promise<boolean> {
@@ -162,7 +114,7 @@ export class ContractService {
       const id = event?.args?.id.toNumber();
       
       // Manually notify listeners since we've waited for the receipt
-      this.notifyTransactionChange();
+      this.eventManager.notifyTransactionChange();
       
       return id !== undefined ? id.toString() : null;
     } catch (error) {
@@ -190,7 +142,7 @@ export class ContractService {
       await tx.wait();
       
       // Manually notify listeners since we've waited for the receipt
-      this.notifyTransactionChange();
+      this.eventManager.notifyTransactionChange();
       
       return true;
     } catch (error) {
@@ -234,7 +186,7 @@ export class ContractService {
     }
   }
 
-  public async getStats(): Promise<{ totalTransactions: number, removedTransactions: number }> {
+  public async getStats(): Promise<ContractStats> {
     try {
       if (!this.contract) throw new Error("Contract not initialized");
       
